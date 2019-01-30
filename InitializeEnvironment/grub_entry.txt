@@ -1,0 +1,14 @@
+﻿#!/bin/sh
+exec tail -n +3 $0
+#
+#
+#
+
+menuentry "sharpsuite" {
+insmod part_msdos
+insmod ext2
+insmod gzio 
+search --no-floppy --fs-uuid --set=root {uuid}
+linux {linux_img} root=UUID={uuid} ro init={init}
+initrd {initrd_img}
+}
