@@ -58,7 +58,7 @@ namespace InitializeEnvironment
             }
 
             // these are dynamically loaded
-            var compat_libs = new[] { "librt." };
+            var compat_libs = new[] { "librt.", "libssl.", "libcrypto.", "libz.", "libm.", "libdl." };
 
             foreach (var lib in compat_libs)
             {

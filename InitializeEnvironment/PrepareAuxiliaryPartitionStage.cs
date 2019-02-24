@@ -108,6 +108,20 @@ namespace InitializeEnvironment
 
                 Log.Debug("{0} -> {1}", dep, target);
                 File.Copy(dep, target, true);
+
+                var potential_usr_lib_symlink = target.Replace("/lib/", "/usr/lib/");
+                var potential_lib_symlink = target.Replace("/usr/lib/", "/lib/");
+
+                if (!dir.StartsWith("/usr/lib") && !File.Exists(potential_usr_lib_symlink))
+                {
+                    Log.Debug("{0} -> {1}", target, potential_usr_lib_symlink);
+                    Utilities.RunCommand("ln", "{0} {1}", target, potential_usr_lib_symlink);
+                }
+                else if (!dir.StartsWith("/lib") && !File.Exists(potential_lib_symlink))
+                {
+                    Log.Debug("{0} -> {1}", target, potential_lib_symlink);
+                    Utilities.RunCommand("ln", "{0} {1}", target, potential_lib_symlink);
+                }
             }
 
             Log.Info("Copying dotnet itself...");
