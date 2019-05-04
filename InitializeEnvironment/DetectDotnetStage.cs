@@ -49,9 +49,16 @@ namespace InitializeEnvironment
 
                 if (possible_system_locations.Any(s => dotnet_location.StartsWith(s)))
                 {
-                    download_new_dotnet = Utilities.Prompt("Your installation of dotnet looks like it was" +
-                        "created by a package manager. These types of installations can cause problems when creating" +
-                        "a secondary environment. Do you want to download a fresh copy dedicated to the new environment?");
+                    if (!Program.UseDownloadedDotnet)
+                    {
+                        download_new_dotnet = Utilities.Prompt("Your installation of dotnet looks like it was " +
+                            "created by a package manager. These types of installations can cause problems when creating " +
+                            "a secondary environment. Do you want to download a fresh copy dedicated to the new environment?");
+                     }
+                     else
+                     {
+                        download_new_dotnet = true;
+                     }
                 }
             }
             else
@@ -71,9 +78,6 @@ namespace InitializeEnvironment
                 Log.Info("Downloading .NET Core...");
                 
                 var release_manifest = JObject.Parse(client.DownloadString("http://raw.githubusercontent.com/dotnet/core/master/release-notes/2.2/releases.json"));
-
-                Console.WriteLine("k");
-
                 var releases = release_manifest["releases"];
                 
                 var most_recent_release = releases.Where(r => r["runtime"].Type != JTokenType.Null).OrderByDescending(r => DateTime.Parse(r.Value<string>("release-date"))).First();

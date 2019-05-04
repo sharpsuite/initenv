@@ -66,9 +66,9 @@ namespace InitializeEnvironment
             
             var uuid = Utilities.RunCommand("lsblk", "-no uuid {0}", partition_name).Trim();
 
-            if (!Guid.TryParse(uuid, out Guid garbage))
+            if (string.IsNullOrWhiteSpace(uuid) || !Guid.TryParse(uuid, out Guid garbage))
             {
-                Log.Warn("Couldn't obtain the UUID of the device {0}.", uuid);
+                Log.Warn("Couldn't obtain the UUID of the device {0}.", partition_name);
                 Log.Warn("InitializeEnvironment will be unable to perform GRUB setup.");
             }
             else

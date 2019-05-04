@@ -18,7 +18,10 @@ namespace InitializeEnvironment
 
         public bool Execute()
         {
-            if(File.Exists(Program.BusyboxPath))
+            if (!File.Exists(Program.BusyboxPath) && File.Exists("busybox"))
+                Program.BusyboxPath = "./busybox";
+        
+            if (File.Exists(Program.BusyboxPath))
             {
                 if (Utilities.RunCommand(Program.BusyboxPath, "--help").StartsWith("BusyBox"))
                     return true;
@@ -31,6 +34,7 @@ namespace InitializeEnvironment
             {
                 if (Utilities.DownloadFileWithProgress("https://busybox.net/downloads/binaries/1.30.0-i686/busybox", "./busybox"))
                 {
+                    Utilities.MakeExecutable("./busybox");
                     Program.BusyboxPath = "./busybox";
                     return true;
                 }

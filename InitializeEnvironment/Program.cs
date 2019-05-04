@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using NDesk.Options;
+
 using NLog;
+using NLog.Config;
+using NLog.Targets;
 
 namespace InitializeEnvironment
 {
@@ -29,6 +32,8 @@ namespace InitializeEnvironment
 
         static void Main(string[] args)
         {
+            var log_level = LogLevel.Info;
+        
             OptionSet set = null;
             set = new OptionSet()
             {
@@ -36,8 +41,17 @@ namespace InitializeEnvironment
                 {"b|busybox=", "Sets the busybox binary path.", b => BusyboxPath = Path.GetFullPath(b) },
                 {"use-downloaded-dotnet", "Do not prompt to ask if you want to reuse the downloaded dotnet package.", d => UseDownloadedDotnet = true },
                 {"h|help", "Displays help.", h => DisplayHelp(set) },
-                {"v|verbosity=", "Sets the output verbosity level.", v => { foreach (var rule in LogManager.Configuration.LoggingRules) { rule.EnableLoggingForLevel(LogLevel.FromString(v)); } } },
+                {"v|verbosity=", "Sets the output verbosity level.", v => { foreach (var rule in LogManager.Configuration?.LoggingRules) { rule.EnableLoggingForLevel((log_level = LogLevel.FromString(v))); } } },
             };
+
+            if (LogManager.Configuration == null)
+            {
+                var config = new LoggingConfiguration();
+                var console = new ConsoleTarget("console") { Layout = "${date} [${uppercase:${level}}] ${message}"};
+                config.AddTarget(console);
+                config.AddRule(log_level, LogLevel.Fatal, console);
+                LogManager.Configuration = config;
+            }
 
             var left = set.Parse(args);
 
