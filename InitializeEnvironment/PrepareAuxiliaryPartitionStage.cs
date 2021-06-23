@@ -80,9 +80,15 @@ namespace InitializeEnvironment
 
                 if (!prompt_result)
                     return false;
+
+                if (!Program.NukeAuxiliaryPartition)
+                    Program.NukeAuxiliaryPartition = Utilities.Prompt($"Wipe data on {mount_point}?");
+
+                if (Program.NukeAuxiliaryPartition)
+                    Utilities.RunCommand("rm", $"-rf \"{mount_point}\"");
             }
 
-            var base_dir_names = new[] { "/boot", "/bin", "/sbin", "/dev", "/proc", "/sys", "/run", "/tmp", "/root", "/root/sys", "/lib", "/lib64", "/etc", "/var" };
+            var base_dir_names = new[] { "/boot", "/bin", "/sbin", "/dev", "/proc", "/sys", "/run", "/tmp", "/root", "/root/sys", "/lib", "/lib64", "/etc", "/var", "/usr", "/usr/lib" };
 
             foreach (var dir in base_dir_names)
             {
@@ -111,15 +117,20 @@ namespace InitializeEnvironment
 
                 var potential_usr_lib_symlink = target.Replace("/lib/", "/usr/lib/");
                 var potential_lib_symlink = target.Replace("/usr/lib/", "/lib/");
+                dir = dir.Substring(mount_point.Length);
 
                 if (!dir.StartsWith("/usr/lib") && !File.Exists(potential_usr_lib_symlink))
                 {
                     Log.Debug("{0} -> {1}", target, potential_usr_lib_symlink);
+                    if (!Directory.Exists(Path.GetDirectoryName(potential_usr_lib_symlink)))
+                        Directory.CreateDirectory(Path.GetDirectoryName(potential_usr_lib_symlink));
                     Utilities.RunCommand("ln", "{0} {1}", target, potential_usr_lib_symlink);
                 }
                 else if (!dir.StartsWith("/lib") && !File.Exists(potential_lib_symlink))
                 {
                     Log.Debug("{0} -> {1}", target, potential_lib_symlink);
+                    if (!Directory.Exists(Path.GetDirectoryName(potential_lib_symlink)))
+                        Directory.CreateDirectory(Path.GetDirectoryName(potential_lib_symlink));
                     Utilities.RunCommand("ln", "{0} {1}", target, potential_lib_symlink);
                 }
             }

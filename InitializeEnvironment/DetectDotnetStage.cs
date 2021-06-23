@@ -77,7 +77,7 @@ namespace InitializeEnvironment
                 var client = new WebClient();
                 Log.Info("Downloading .NET Core...");
                 
-                var release_manifest = JObject.Parse(client.DownloadString("http://raw.githubusercontent.com/dotnet/core/master/release-notes/2.2/releases.json"));
+                var release_manifest = JObject.Parse(client.DownloadString("http://raw.githubusercontent.com/dotnet/core/master/release-notes/5.0/releases.json"));
                 var releases = release_manifest["releases"];
                 
                 var most_recent_release = releases.Where(r => r["runtime"].Type != JTokenType.Null).OrderByDescending(r => DateTime.Parse(r.Value<string>("release-date"))).First();

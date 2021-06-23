@@ -30,6 +30,9 @@ namespace InitializeEnvironment
             var cmdline = File.ReadAllText("/proc/cmdline");
             var image_path = cmdline.Split(' ').First(p => p.StartsWith("BOOT_IMAGE")).Split('=')[1];
 
+            if (!File.Exists(image_path))
+                image_path = "/boot" + image_path;
+
             if(!File.Exists(image_path))
             {
                 Log.Error("Image path found in /proc/cmdline, but not in filesystem. Is /boot properly mounted?");

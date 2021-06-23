@@ -27,6 +27,7 @@ namespace InitializeEnvironment
         public static string BusyboxPath { get; set; }
 
         public static bool UseDownloadedDotnet = false;
+        public static bool NukeAuxiliaryPartition = false;
 
         private static Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -40,6 +41,7 @@ namespace InitializeEnvironment
                 {"a|aux|auxiliary-partition=", "Sets the auxiliary partition device name. This is not the mount point, it must be the block device itself!", path => AuxiliaryPartitionPath = path},
                 {"b|busybox=", "Sets the busybox binary path.", b => BusyboxPath = Path.GetFullPath(b) },
                 {"use-downloaded-dotnet", "Do not prompt to ask if you want to reuse the downloaded dotnet package.", d => UseDownloadedDotnet = true },
+                {"w|wipe-aux", "Wipe the auxiliary partition if there is any data present.", w => NukeAuxiliaryPartition = true},
                 {"h|help", "Displays help.", h => DisplayHelp(set) },
                 {"v|verbosity=", "Sets the output verbosity level.", v => { foreach (var rule in LogManager.Configuration?.LoggingRules) { rule.EnableLoggingForLevel((log_level = LogLevel.FromString(v))); } } },
             };
