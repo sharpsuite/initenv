@@ -30,11 +30,15 @@ namespace InitializeEnvironment
             var cmdline = File.ReadAllText("/proc/cmdline");
             var image_path = cmdline.Split(' ').First(p => p.StartsWith("BOOT_IMAGE")).Split('=')[1];
 
+            if (image_path.StartsWith('('))
+                image_path = image_path.Substring(image_path.IndexOf(')') + 1);
+
             if (!File.Exists(image_path))
                 image_path = "/boot" + image_path;
 
             if(!File.Exists(image_path))
             {
+                Log.Error($"Detected image path as {image_path}");
                 Log.Error("Image path found in /proc/cmdline, but not in filesystem. Is /boot properly mounted?");
                 return false;
             }
@@ -64,8 +68,8 @@ namespace InitializeEnvironment
 
             if(!File.Exists(Program.InitrdPath))
             {
-                Log.Error("Couldn't find your initrd file.");
-                return false;
+                Log.Warn("Couldn't find your initrd file. If your kernel lacks necessary modules, sharpsuite may fail to boot.");
+                Program.InitrdPath = null;
             }
 
             return true;

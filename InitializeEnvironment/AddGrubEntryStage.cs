@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 namespace InitializeEnvironment
 {
@@ -23,17 +24,29 @@ namespace InitializeEnvironment
                 return false;
             }
 
-            if(string.IsNullOrWhiteSpace(Program.AuxiliaryPartitionUuid))
+/*          if(string.IsNullOrWhiteSpace(Program.AuxiliaryPartitionUuid))
             {
                 Log.Error("Couldn't find partition UUID. GRUB won't be configured.");
                 return false;
-            }
+            }*/
 
             var template = File.ReadAllText("grub_entry.txt").Replace("\r\n", "\n");
+            
+            var template_lines = template.Split('\n');
+
+            if (!File.Exists(Program.InitrdPath)) {
+                template_lines = template_lines.Where(line => !line.StartsWith("initrd")).ToArray();
+                template = string.Join('\n', template_lines);
+                template = template.Replace("root=UUID={uuid}", "root={root-dev}");
+            }
+
+            if (!File.Exists(Program.InitrdPath) || string.IsNullOrWhiteSpace(Program.AuxiliaryPartitionUuid))
+                template = template.Replace("root=UUID={uuid}", "root={root-dev}");
 
             template = template.Replace("{linux_img}", Program.VmlinuzPath);
             template = template.Replace("{initrd_img}", Program.InitrdPath);
             template = template.Replace("{uuid}", Program.AuxiliaryPartitionUuid);
+            template = template.Replace("{root-dev}", Program.AuxiliaryPartitionPath);
             template = template.Replace("{init}", File.Exists("dotnet-init.sh") ? "/dotnet/dotnet-init" : "/bin/sh");
 
             File.WriteAllText("/etc/grub.d/06_sharpsuite", template);
@@ -43,7 +56,17 @@ namespace InitializeEnvironment
             Log.Info("GRUB SAYS:");
             Log.Info(new string('-', 50));
 
-            var result = Utilities.RunCommand("update-grub", "");
+            var grub_command = "update-grub";
+            var grub_command_args = "";
+
+            // crude
+            if (!File.Exists(grub_command)) 
+            {
+                grub_command = "grub2-mkconfig";
+                grub_command_args = "-o /boot/grub2/grub.cfg";
+            }
+
+            var result = Utilities.RunCommand(grub_command, grub_command_args);
 
             Log.Info(new string('-', 50));
 

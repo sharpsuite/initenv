@@ -69,7 +69,7 @@ namespace InitializeEnvironment
             if (string.IsNullOrWhiteSpace(uuid) || !Guid.TryParse(uuid, out Guid garbage))
             {
                 Log.Warn("Couldn't obtain the UUID of the device {0}.", partition_name);
-                Log.Warn("InitializeEnvironment will be unable to perform GRUB setup.");
+//                Log.Warn("InitializeEnvironment will be unable to perform GRUB setup.");
             }
             else
                 Program.AuxiliaryPartitionUuid = uuid;
@@ -100,7 +100,9 @@ namespace InitializeEnvironment
             Log.Info("Copying images...");
 
             File.Copy(Program.VmlinuzPath, Path.Combine(mount_point, Program.VmlinuzPath.Substring(1)), true);
-            File.Copy(Program.InitrdPath, Path.Combine(mount_point, Program.InitrdPath.Substring(1)), true);
+
+            if (File.Exists(Program.InitrdPath))
+                File.Copy(Program.InitrdPath, Path.Combine(mount_point, Program.InitrdPath.Substring(1)), true);
 
             Log.Info("Copying dotnet dependencies...");
 
