@@ -30,8 +30,27 @@ namespace InitializeEnvironment
             var process = Process.Start(psi);
             
             var ret = process.StandardOutput.ReadToEnd();
-
             return ret;
+        }
+
+        public static bool Link(string target, string link_name, bool symbolic = true, bool force = false, bool check_if_exists = true)
+        {
+            if (check_if_exists)
+                if (Mono.Unix.UnixFileSystemInfo.TryGetFileSystemEntry(link_name, out Mono.Unix.UnixFileSystemInfo entry))
+                    if (entry.Exists && entry.IsSymbolicLink)
+                        if (Path.GetFullPath((entry as Mono.Unix.UnixSymbolicLinkInfo).ContentsPath) == Path.GetFullPath(target))
+                            return false;
+
+            var flags = "-T";
+
+            if (symbolic)
+                flags += "s";
+            
+            if (force)
+                flags += "f";
+            
+            Utilities.RunCommand("ln", $"{flags} {target} {link_name}");
+            return true;
         }
 
         public static string FindLibrary(string search_term)

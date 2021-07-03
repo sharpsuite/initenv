@@ -33,6 +33,7 @@ namespace InitializeEnvironment
         public static List<IStage> Stages = new List<IStage>();
 
         public static bool AvoidPrompts = false;
+        public static bool AcceptDirtyAux = false;
 
         private static Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -48,8 +49,9 @@ namespace InitializeEnvironment
                 {"no-prompt", "Disable prompts, automatically choose the safest options.", p => AvoidPrompts = true},
                 {"use-downloaded-dotnet", "Do not prompt to ask if you want to reuse the downloaded dotnet package.", d => UseDownloadedDotnet = true },
                 {"w|wipe-aux", "Do not prompt to wipe the auxiliary partition if there is any data present. (Dangerous!)", w => NukeAuxiliaryPartition = true},
+                {"accept-dirty", "Accept a dirty auxiliary partition.", a => AcceptDirtyAux = true},
                 {"h|help", "Displays help.", h => DisplayHelp(set) },
-                {"v|verbosity=", "Sets the output verbosity level.", v => { foreach (var rule in LogManager.Configuration?.LoggingRules) { rule.EnableLoggingForLevel((log_level = LogLevel.FromString(v))); } } },
+                {"v|verbosity=", "Sets the output verbosity level.", v => { foreach (var rule in LogManager.Configuration?.LoggingRules) { rule.EnableLoggingForLevel((log_level = LogLevel.FromString(v.Trim()))); } } },
             };
 
             if (LogManager.Configuration == null)

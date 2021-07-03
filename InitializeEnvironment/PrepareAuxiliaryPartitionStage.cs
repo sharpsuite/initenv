@@ -24,6 +24,7 @@ namespace InitializeEnvironment
         {
             var cwd = Environment.CurrentDirectory;
             var partition_name = Program.AuxiliaryPartitionPath;
+            partition_name = Path.GetFullPath(partition_name);
 
             var aux_part_entry = Mono.Unix.UnixFileSystemInfo.GetFileSystemEntry(partition_name);
             var aux_path = partition_name;
@@ -90,7 +91,7 @@ namespace InitializeEnvironment
 
             Environment.CurrentDirectory = aux_path;
 
-            if (Directory.GetDirectories(aux_path).Any())
+            if (Directory.GetDirectories(aux_path).Any() && !Program.AcceptDirtyAux)
             {
                 if (!Program.NukeAuxiliaryPartition)
                 {
@@ -129,7 +130,7 @@ namespace InitializeEnvironment
             {
                 Directory.CreateDirectory(Utilities.CombinePath(aux_path, "usr", dir));
                 Log.Debug($"Created /usr/{dir} on {Utilities.CombinePath(aux_path, dir)}");
-                Utilities.RunCommand("ln", $"-s usr/{dir} {dir}");
+                Utilities.Link($"usr/{dir}", dir);
             }
 
             Log.Info("Created filesystem layout.");
@@ -182,9 +183,9 @@ namespace InitializeEnvironment
 
             Log.Info("Creating dotnet symlinks...");
 
-            Utilities.RunCommand("ln", "-s {0} {1}", "/dotnet/dotnet", Utilities.CombinePath(aux_path, "usr/bin/dotnet"));
-            Utilities.RunCommand("ln", "-s {0} {1}", "/dotnet/host", Utilities.CombinePath(aux_path, "usr/bin/host"));
-            Utilities.RunCommand("ln", "-s {0} {1}", "/dotnet/shared", Utilities.CombinePath(aux_path, "usr/bin/shared"));
+            Utilities.Link("/dotnet/dotnet", Utilities.CombinePath(aux_path, "usr/bin/dotnet"));
+            Utilities.Link("/dotnet/host", Utilities.CombinePath(aux_path, "usr/bin/host"));
+            Utilities.Link("/dotnet/shared", Utilities.CombinePath(aux_path, "usr/bin/shared"));
             //Utilities.RunCommand("ln", "{0} {1}", Utilities.CombinePath(aux_path, "/dotnet/dotnet-thunk.sh"), Utilities.CombinePath(aux_path, "/bin/dotnet-thunk"));
 
             Log.Info("Copying busybox...");
@@ -195,10 +196,12 @@ namespace InitializeEnvironment
             Log.Info("Adding busybox links...");
 
             var busybox_commands = Utilities.RunCommand(Program.BusyboxPath, "--list").Split('\n').Select(c => c.Trim());
+            var skipped = 0;
 
             foreach(var command in busybox_commands)
             {
-                Utilities.RunCommand("ln", "-s {0} {1}", "/usr/bin/busybox", Utilities.CombinePath(aux_path, "usr/bin/" + command));
+                //Utilities.RunCommand("ln", "-Ts {0} {1}", "/usr/bin/busybox", link_name);
+                Utilities.Link("/usr/bin/busybox", Utilities.CombinePath(aux_path, "usr/bin/" + command), symbolic: true, check_if_exists: true);
             }
 
             /*if (File.Exists("dotnet-init.sh"))
