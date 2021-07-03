@@ -178,7 +178,7 @@ namespace InitializeEnvironment
             Log.Info("Copying dotnet itself...");
 
             var dotnet_parent_dir = Path.GetDirectoryName(Program.DotnetPath);
-            Utilities.RunCommand("cp", "-rf {0} {1}", dotnet_parent_dir, Utilities.CombinePath(aux_path, "dotnet"));
+            Utilities.RunCommand("cp", "-rfT {0} {1}", dotnet_parent_dir, aux_path);
             Utilities.MakeExecutable(Utilities.CombinePath(aux_path, "dotnet/dotnet"));
 
             Log.Info("Creating dotnet symlinks...");
