@@ -49,7 +49,7 @@ namespace InitializeEnvironment
 
                 if (possible_system_locations.Any(s => dotnet_location.StartsWith(s)))
                 {
-                    if (!Program.UseDownloadedDotnet)
+                    if (!Program.UseDownloadedDotnet && !Program.AvoidPrompts)
                     {
                         download_new_dotnet = Utilities.Prompt("Your installation of dotnet looks like it was " +
                             "created by a package manager. These types of installations can cause problems when creating " +
@@ -66,7 +66,15 @@ namespace InitializeEnvironment
 
             if(download_new_dotnet && File.Exists("./dotnet-tmp/dotnet"))
             {
-                download_new_dotnet = !Program.UseDownloadedDotnet && !Utilities.Prompt("Found a downloaded copy of dotnet. Reuse it?");
+                //download_new_dotnet = !Program.UseDownloadedDotnet ? (Program.AvoidPrompts ? true : Utilities.Prompt("Found a downloaded copy of dotnet. Reuse it?")) : true;
+                if (!Program.UseDownloadedDotnet)
+                {
+                    if (Program.AvoidPrompts)
+                        download_new_dotnet = true;
+                    else
+                        download_new_dotnet = Utilities.Prompt("Found a downloaded copy of dotnet. Reuse it?");
+                }
+                else { download_new_dotnet = false; }
                 dotnet_location = Path.GetFullPath("./dotnet-tmp/dotnet");
             }
 

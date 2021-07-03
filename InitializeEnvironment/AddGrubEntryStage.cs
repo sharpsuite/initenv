@@ -47,7 +47,7 @@ namespace InitializeEnvironment
             template = template.Replace("{initrd_img}", Program.InitrdPath);
             template = template.Replace("{uuid}", Program.AuxiliaryPartitionUuid);
             template = template.Replace("{root-dev}", Program.AuxiliaryPartitionPath);
-            template = template.Replace("{init}", File.Exists("dotnet-init.sh") ? "/dotnet/dotnet-init" : "/bin/sh");
+            template = template.Replace("{init}", "/bin/init");
 
             File.WriteAllText("/etc/grub.d/06_sharpsuite", template);
             Utilities.MakeExecutable("/etc/grub.d/06_sharpsuite");

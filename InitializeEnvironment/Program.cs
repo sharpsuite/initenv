@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NDesk.Options;
 
 using NLog;
@@ -29,6 +30,10 @@ namespace InitializeEnvironment
         public static bool UseDownloadedDotnet = false;
         public static bool NukeAuxiliaryPartition = false;
 
+        public static List<IStage> Stages = new List<IStage>();
+
+        public static bool AvoidPrompts = false;
+
         private static Logger Log = LogManager.GetCurrentClassLogger();
 
         static void Main(string[] args)
@@ -38,10 +43,11 @@ namespace InitializeEnvironment
             OptionSet set = null;
             set = new OptionSet()
             {
-                {"a|aux|auxiliary-partition=", "Sets the auxiliary partition device name. This is not the mount point, it must be the block device itself!", path => AuxiliaryPartitionPath = path},
+                {"a|aux|auxiliary-partition=", "Sets the auxiliary partition device name or path.", path => AuxiliaryPartitionPath = path},
                 {"b|busybox=", "Sets the busybox binary path.", b => BusyboxPath = Path.GetFullPath(b) },
+                {"no-prompt", "Disable prompts, automatically choose the safest options.", p => AvoidPrompts = true},
                 {"use-downloaded-dotnet", "Do not prompt to ask if you want to reuse the downloaded dotnet package.", d => UseDownloadedDotnet = true },
-                {"w|wipe-aux", "Wipe the auxiliary partition if there is any data present.", w => NukeAuxiliaryPartition = true},
+                {"w|wipe-aux", "Do not prompt to wipe the auxiliary partition if there is any data present. (Dangerous!)", w => NukeAuxiliaryPartition = true},
                 {"h|help", "Displays help.", h => DisplayHelp(set) },
                 {"v|verbosity=", "Sets the output verbosity level.", v => { foreach (var rule in LogManager.Configuration?.LoggingRules) { rule.EnableLoggingForLevel((log_level = LogLevel.FromString(v))); } } },
             };
@@ -57,30 +63,30 @@ namespace InitializeEnvironment
 
             var left = set.Parse(args);
 
-            var stages = new List<IStage>()
+            Stages.AddRange(new IStage[]
             {
                 new DetectOperatingSystemStage(),
                 new DetectDotnetStage(),
                 new DetectDotnetDependenciesStage(),
                 new DetectBusyboxStage(),
-                new PrepareAuxiliaryPartitionStage(),
-                new AddGrubEntryStage(),
-                new UnmountAuxiliaryPartitionStage()
-            };
+                new PrepareAuxiliaryPartitionStage()
+            });
 
-            foreach(var stage in stages)
+            while (Stages.Any())
             {
-                Log.Info("{0} starting...", stage.StageIdentifier);
+                var top_stage = Stages.First();
+                Log.Info("{0} starting...", top_stage.StageIdentifier);
 
-                var result = stage.Execute();
+                var result = top_stage.Execute();
 
                 if (!result)
                 {
-                    Log.Error("Stage {0} failed, exiting.", stage.StageIdentifier);
+                    Log.Error("Stage {0} failed, exiting.", top_stage.StageIdentifier);
                     break;
                 }
 
-                Log.Info("{0} completed successfully.", stage.StageIdentifier);
+                Log.Info("{0} completed successfully.", top_stage.StageIdentifier);
+                Stages.RemoveAt(0);
             }
 
             Log.Info("InitializeEnvironment done.");

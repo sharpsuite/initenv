@@ -6,12 +6,16 @@ using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 
 namespace InitializeEnvironment
 {
     public static class Utilities
     {
         public static Logger Log = LogManager.GetCurrentClassLogger();
+
+        public static string CombinePath(params string[] path) => !path.Any() ? null :
+            Path.Combine(path[0], Path.Combine(path.Skip(1).Select(p => p.TrimStart('/')).ToArray()));
 
         public static string RunCommand(string command, string arguments, params object[] format)
         {
@@ -24,7 +28,7 @@ namespace InitializeEnvironment
             //Console.WriteLine(psi.Arguments);
 
             var process = Process.Start(psi);
-            process.WaitForExit();
+            
             var ret = process.StandardOutput.ReadToEnd();
 
             return ret;

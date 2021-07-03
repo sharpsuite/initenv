@@ -37,8 +37,13 @@ namespace InitializeEnvironment
                 return false;
             }
 
+            var blacklisted_deps = new [] { "linux-vdso." };
+
             foreach(var line in ldd_output)
             {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
                 var path = line;
 
                 if (path.Contains("=>"))
@@ -47,9 +52,15 @@ namespace InitializeEnvironment
                 if (path.Contains(" "))
                     path = path.Split(' ')[0];
 
+                if (blacklisted_deps.Any(path.StartsWith))
+                {
+                    Log.Debug($"Skipping blacklisted dependency {path}");
+                    continue;
+                }
+
                 if (!File.Exists(path))
                 {
-                    Log.Warn("Encountered dotnet dependency that couldn't be located: {0}, our best guess is \"{1}\" (which doesn't exist)", line, path);
+                    Log.Warn("Encountered a dotnet dependency that couldn't be located: {0}, our best guess is \"{1}\" (which doesn't exist)", line, path);
                     continue;
                 }
 
